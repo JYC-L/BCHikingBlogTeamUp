@@ -4,7 +4,7 @@ import { FormControl, FormLabel } from "@chakra-ui/react";
 import { Input, InputGroup, InputRightElement } from "@chakra-ui/react";
 import { VStack } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
-import axios from "axios";
+import api from "../../api";
 import { useState } from "react";
 import { useHistory } from "react-router";
 import { Button } from "@chakra-ui/react";
@@ -47,21 +47,12 @@ const Signup = () => {
     }
     console.log(name, email, password, pic);
     try {
-      const config = {
-        headers: {
-          "Content-type": "application/json",
-        },
-      };
-      const { data } = await axios.post(
-        "/api/user",
-        {
-          name,
-          email,
-          password,
-          pic,
-        },
-        config
-      );
+      const { data } = await api.post("/api/users/register", {
+        username: name,
+        email,
+        password,
+        pic,
+      });
       console.log(data);
       toast({
         title: "Registration Successful",
@@ -72,7 +63,7 @@ const Signup = () => {
       });
       localStorage.setItem("userInfo", JSON.stringify(data));
       setPicLoading(false);
-      history.push("/chats");
+      history.push("/feed");
     } catch (error) {
       toast({
         title: "Error Occured!",

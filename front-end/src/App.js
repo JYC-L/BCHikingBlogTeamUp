@@ -1,17 +1,21 @@
-import logo from "./logo.svg";
 import "./App.css";
-import { Button } from "@chakra-ui/react";
-import { Route } from "react-router-dom/cjs/react-router-dom.min";
+import { Route, Switch } from "react-router-dom";
 import Homepage from "./Pages/Homepage";
 import ChatPage from "./Pages/ChatPage";
+import FeedPage from "./Pages/FeedPage";
+import TrailsPage from "./Pages/TrailsPage";
+import NewJournalPage from "./Pages/NewJournalPage";
 
 function App() {
   return (
     <div className="App">
-      <Route path="/" component={Homepage} exact />
-      <Route path="/chat" component={ChatPage} />
-      <Route></Route>
-      <Route></Route>
+      <Switch>
+        <Route path="/" component={Homepage} exact />
+        <Route path="/feed" component={FeedPage} />
+        <Route path="/trails" component={TrailsPage} />
+        <Route path="/journals/new" component={NewJournalPage} />
+        <Route path="/chat" component={ChatPage} />
+      </Switch>
     </div>
   );
 }

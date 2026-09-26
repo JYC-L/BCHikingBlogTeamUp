@@ -32,7 +32,7 @@ const Homepage = () => {
       <Box bg="white" w="100%" p={4} borderRadius="lg" borderWidth="1px">
         <Tabs isFitted variant="soft-rounded">
           <TabList mb="1em">
-            <Tab></Tab>
+            <Tab>Login</Tab>
             <Tab>Sign Up</Tab>
           </TabList>
           <TabPanels>

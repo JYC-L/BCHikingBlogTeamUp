@@ -3,7 +3,7 @@ import { FormControl, FormLabel } from "@chakra-ui/react";
 import { Input, InputGroup, InputRightElement } from "@chakra-ui/react";
 import { VStack } from "@chakra-ui/react";
 import { useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useToast } from "@chakra-ui/react";
 import { useHistory } from "react-router-dom";
 
@@ -32,17 +32,7 @@ const Login = () => {
     }
 
     try {
-      const config = {
-        headers: {
-          "Content-type": "application/json",
-        },
-      };
-
-      const { data } = await axios.post(
-        "/api/user/login",
-        { email, password },
-        config
-      );
+      const { data } = await api.post("/api/users/login", { email, password });
 
       toast({
         title: "Login Successful",
@@ -54,7 +44,7 @@ const Login = () => {
 
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
-      history.push("/chats");
+      history.push("/feed");
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -103,17 +93,6 @@ const Login = () => {
         isLoading={loading}
       >
         Login
-      </Button>
-      <Button
-        variant="solid"
-        colorScheme="red"
-        width="100%"
-        onClick={() => {
-          setEmail("guest@example.com");
-          setPassword("123456");
-        }}
-      >
-        Get Guest User Credentials
       </Button>
     </VStack>
   );

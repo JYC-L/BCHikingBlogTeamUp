@@ -1,43 +1,38 @@
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
-const Trail = require("../models/Trail.js");
-const User = require("../models/Users.js");
-const Blog = require("../models/Blog.js");
-const { ObjectId } = require("mongodb");
-const blogRoute = require("../routers/router.blog.js");
-const trailRoute = require("../routers/router.trail.js");
-const userRoute = require("../routers/router.user.js");
+const cors = require("cors");
+require("dotenv").config({ path: __dirname + "/../.env" });
 
-require("dotenv").config({ path: __dirname + "/.env" });
+const blogRoute = require("../routes/router.blog");
+const trailRoute = require("../routes/router.trail");
+const userRoute = require("../routes/router.user");
+const uploadRoute = require("../routes/router.upload");
+const seedTrails = require("../data/seedTrails");
 
-console.log(process.env);
+const app = express();
 const PORT = process.env.PORT || 5000;
-const db_connection = process.env.DB_CONNECTION_STR;
 
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
-//route
-app.use("/api/trails/", trailRoute);
-app.use("/api/blogs/", blogRoute);
-app.use("/api/users/", userRoute);
-
-app.get("/", (req, res) => {
-  res.send("Hellow from the Node API server");
+app.get("/", (_req, res) => {
+  res.send("BC Hiking Blog API");
 });
 
-/**
- * establishes connections to the mongodb database
- */
+app.use("/api/trails", trailRoute);
+app.use("/api/blogs", blogRoute);
+app.use("/api/users", userRoute);
+app.use("/api/upload", uploadRoute);
+
 mongoose
-  .connect(db_connection)
-  .then(() => {
-    console.log("database connection launched");
-    app.listen(PORT, (req, res) => {
-      console.log("server is running at port 3001");
+  .connect(process.env.DB_CONNECTION_STR)
+  .then(async () => {
+    await seedTrails();
+    app.listen(PORT, () => {
+      console.log(`server is running at port ${PORT}`);
     });
   })
-  .catch(() => {
-    console.log("database connection fails");
+  .catch((error) => {
+    console.error("database connection fails:", error.message);
+    process.exit(1);
   });

@@ -1,15 +1,16 @@
-const express = require("express");
-const {
+import { Router } from "express";
+import {
   createBlog,
+  deleteBlog,
   getAllBlogs,
   getBlogById,
   getBlogsByTrail,
-  updateBlog,
-  deleteBlog,
   getBlogsByUser,
-} = require("../controllers/controller.blog");
-const { protect } = require("../middleware/auth");
-const router = express.Router();
+  updateBlog,
+} from "../controllers/controller.blog";
+import { protect } from "../middleware/auth";
+
+const router = Router();
 
 router.get("/", getAllBlogs);
 router.get("/trail/:trailId", getBlogsByTrail);
@@ -19,4 +20,4 @@ router.post("/", protect, createBlog);
 router.put("/:id", protect, updateBlog);
 router.delete("/:id", protect, deleteBlog);
 
-module.exports = router;
+export default router;
