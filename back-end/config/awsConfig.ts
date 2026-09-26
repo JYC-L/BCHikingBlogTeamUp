@@ -1,6 +1,5 @@
-const AWS = require("aws-sdk");
+import AWS from "aws-sdk";
 
-// Configure AWS SDK with your credentials and region
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -9,4 +8,4 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-module.exports = s3;
+export default s3;

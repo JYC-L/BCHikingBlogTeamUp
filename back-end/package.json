@@ -2,19 +2,33 @@
   "name": "simple-express-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/services/mainServer.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node index.js"
+    "dev": "tsx services/mainServer.ts",
+    "build": "tsc",
+    "start": "node dist/services/mainServer.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1691.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "mongodb": "^6.5.0",
-    "mongoose": "^8.2.4",
-    "nodemon": "^3.1.0"
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.7.2",
+    "multer": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^22.15.30",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   }
 }

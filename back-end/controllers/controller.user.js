@@ -1,75 +1,124 @@
-const User = require('../Models/Users')
+const User = require("../models/UserModel");
+const generateToken = require("../config/generateToken");
 
-const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).send({message : error.message})
-        
+const publicUser = (user) => ({
+  _id: user._id,
+  username: user.username,
+  email: user.email,
+  pic: user.pic,
+  token: generateToken(user._id),
+});
+
+const registerUser = async (req, res) => {
+  try {
+    const username = (req.body.username || req.body.name || "").trim();
+    const email = (req.body.email || "").trim().toLowerCase();
+    const password = req.body.password || "";
+
+    if (!username || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Username, email, and password are required." });
     }
-} 
-
-const getUser = async(req, res) => {
-    try {
-        const {id} = req.params;
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).send({message: "The user cannot be found!"});
-        }
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(400).send({message: error.message});
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters." });
     }
-}
 
-const updateUser = async(req, res) => {
-    try {
-        const {id} = req.params;
-        //findByIdAndUpdate method finds the object by its id and update it
-        //base on the given request body
-        const user = await User.findByIdAndUpdate(id, req.body, {runValidators: true});
-        
-        if (!user) {
-            return res.status(404).json({message: "the user is not found!"});
-        }
-
-        const updatedUser = await User.findById(id);
-        res.status(200).json(updatedUser);     
-
-    } catch (error) {
-        res.status(500).json({message: error.message})
+    const existing = await User.findOne({ $or: [{ email }, { username }] });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "That email or username is already registered." });
     }
+
+    const payload = { username, email, password };
+    if (req.body.pic) payload.pic = req.body.pic;
+    const user = await User.create(payload);
+    res.status(201).json(publicUser(user));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-
-
-
-const createUser = async (req, res) => {
-    try {
-        const user = await User.create(req.body);
-        res.status(200).json(user);
-
-    } catch (err) {
-        res.status(500).send({Message: err.Message})
-
+const loginUser = async (req, res) => {
+  try {
+    const email = (req.body.email || "").trim().toLowerCase();
+    const password = req.body.password || "";
+    const user = await User.findOne({ email });
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: "Invalid email or password." });
     }
-}
+    res.status(200).json(publicUser(user));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
+const getMe = async (req, res) => {
+  res.status(200).json(req.user);
+};
 
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-const deleteUser = async(req, res) => {
-    try {
-        const {id} = req.params;
-        const user = await User.findByIdAndDelete(id);
-
-        if (!user) {
-            return res.status(404).json({message: "The user cannot be found"});
-        }
-        res.status(200).json({message: "user successfully deleted"});
-    } catch (error) {
-        res.status(500).send({message: error.message});
+const getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "The user cannot be found." });
     }
-}
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
-module.exports = {getAllUsers, getUser, updateUser, deleteUser, createUser}
+const updateUser = async (req, res) => {
+  try {
+    if (req.body.password) {
+      return res
+        .status(400)
+        .json({ message: "Password changes are not available yet." });
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "The user cannot be found." });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "The user cannot be found." });
+    }
+    res.status(200).json({ message: "User successfully deleted." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getMe,
+  getAllUsers,
+  getUser,
+  updateUser,
+  deleteUser,
+};

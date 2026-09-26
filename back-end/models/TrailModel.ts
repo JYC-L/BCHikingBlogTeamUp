@@ -1,12 +1,39 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const trailSchema = mongoose.Schema(
+export const difficulties = [
+  "Easy",
+  "Medium",
+  "Hard",
+  "Extremely challenging",
+] as const;
+
+export type Difficulty = (typeof difficulties)[number];
+
+export interface ITrail {
+  name: string;
+  location: string;
+  difficulty: Difficulty;
+  photos: string[];
+  elevation: string;
+  length: string;
+  routeType: string;
+  rating: number | null;
+  description: string;
+  latitude: number;
+  longitude: number;
+  geo: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+}
+
+const trailSchema = new mongoose.Schema<ITrail>(
   {
     name: { type: String, required: true, unique: true },
     location: { type: String, required: true },
     difficulty: {
       type: String,
-      enum: ["Easy", "Medium", "Hard", "Extremely challenging"],
+      enum: difficulties,
       required: true,
     },
     photos: { type: [String], default: [] },
@@ -27,4 +54,6 @@ const trailSchema = mongoose.Schema(
 
 trailSchema.index({ geo: "2dsphere" });
 
-module.exports = mongoose.model("Trail", trailSchema);
+const Trail = mongoose.model<ITrail>("Trail", trailSchema);
+
+export default Trail;

@@ -1,114 +1,148 @@
-const { default: mongoose } = require('mongoose');
-const Blog = require('../Models/Blog')
+const Blog = require("../models/BlogModel");
+const Trail = require("../models/TrailModel");
 
+const feedQuery = () =>
+  Blog.find()
+    .sort({ createdAt: -1 })
+    .populate("user", "username pic")
+    .populate("trail", "name location difficulty length elevation");
 
 const getAllBlogs = async (req, res) => {
-    try {
-        const blogs = await Blog.find();
-        res.status(200).json(blogs);
-    } catch (error) {
-        res.status(500).send({message : error.message});
-    }
+  try {
+    const blogs = await feedQuery();
+    res.status(200).json(blogs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-
 const getBlogById = async (req, res) => {
-    try {
-        const {blogid} = req.params;
-        const blog = await Blog.findById(blogid);
-        if (!blog) {
-            return res.status(404).send({message: "the blog cannot be found!"});
-        }
-
-        res.status(200).json(blogs);
-    } catch (error) {
-        res.status(500).send({message : error.message});
+  try {
+    const blog = await Blog.findById(req.params.id)
+      .populate("user", "username pic")
+      .populate("trail", "name location difficulty length elevation");
+    if (!blog) {
+      return res.status(404).json({ message: "The journal cannot be found." });
     }
-}
+    res.status(200).json(blog);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 const getBlogsByTrail = async (req, res) => {
-    try {
-        const {trailId} = req.params;
-        const blogs = await Blog.find({trail: trailId}).populate("trail");
-        if (blogs.length == 0) {
-            return res.status(404).send({message: "No blog posts of this trail is found"});
-        
-        }
-        res.status(200).json(blogs);
-    } catch (error) {
-        res.status(500).send({message: error.message});
-        
-    }
-}
+  try {
+    const blogs = await Blog.find({ trail: req.params.trailId })
+      .sort({ createdAt: -1 })
+      .populate("user", "username pic")
+      .populate("trail", "name location difficulty");
+    res.status(200).json(blogs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-const getBlogsByUser = async(req, res) => {
-    try {
-        const {userId} = req.params;
-        const blogs = await Blog.find({user: userId}).populate('user');
-        if (blogs.length == 0) {
-            return res.status(404).send({message: "The user has not posted anything yet"});
-        }
-        res.status(200).json(blogs);
-    } catch (error) {
-        res.status(500).send({message: error.message});
-    }
-}
+const getBlogsByUser = async (req, res) => {
+  try {
+    const blogs = await Blog.find({ user: req.params.userId })
+      .sort({ createdAt: -1 })
+      .populate("user", "username pic")
+      .populate("trail", "name location difficulty");
+    res.status(200).json(blogs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-
-/**
- * creates a blog post that associates to an existing trail profile
- * @param {*} req - must contain an existing and valid trail id parameter, and an existing user 
- * @param {*} res 
- */
 const createBlog = async (req, res) => {
-    try {
-
-        const { user, trail } = req.body;
-
-        req.body.trail = new mongoose.Types.ObjectId(trail);
-        req.body.user = new mongoose.Types.ObjectId(user);
-        
-        const blog = await Blog.create(req.body);
-
-        res.status(200).json(blog);
-
-    } catch (err) {
-        
-        res.status(500).send({message: err.message})
-
+  try {
+    const { title, trail, content } = req.body;
+    if (!title || !trail || !content) {
+      return res
+        .status(400)
+        .json({ message: "Title, trail, and journal text are required." });
     }
-}
 
-const updateBlog = async(req, res) => {
-    try {
-        const {id} = req.params;
-        const blog = await Blog.findByIdAndUpdate(id, req.body, {runValidators: true});
-
-        if (!blog) {
-            return res.status(404).json({message: "The blog is not found!"});
-        }
-
-        const updatedBlog = await Blog.findById(id);
-        res.status(200).json(updatedBlog);
-
-    } catch (error) {
-        res.status(400).json({message: error.message});
+    const trailDoc = await Trail.findById(trail);
+    if (!trailDoc) {
+      return res.status(404).json({ message: "That trail does not exist." });
     }
-}
 
-const deleteBlog = async(req,res)=> {
-    try {
-        const {id} = req.params;
-        const blog = Blog.findByIdAndDelete(id);
-        
-        if (!blog) {
-            return res.status(404).json({message: "the blog cannot be found."});
-        }
-        res.status(200).json({message: "blog successfully deleted"});
-    } catch (error) {
-        res.status(500).send({message: error.message});
+    const tags = Array.isArray(req.body.tags)
+      ? req.body.tags
+      : String(req.body.tags || "")
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean);
+
+    const blog = await Blog.create({
+      title,
+      trail,
+      content,
+      user: req.user._id,
+      images: req.body.images || [],
+      conditions: req.body.conditions || "",
+      difficulty: req.body.difficulty || "",
+      distanceKm: req.body.distanceKm || undefined,
+      elevationM: req.body.elevationM || undefined,
+      durationMinutes: req.body.durationMinutes || undefined,
+      tags,
+    });
+
+    const populated = await Blog.findById(blog._id)
+      .populate("user", "username pic")
+      .populate("trail", "name location difficulty length elevation");
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateBlog = async (req, res) => {
+  try {
+    const existing = await Blog.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: "The journal cannot be found." });
     }
-}
+    if (String(existing.user) !== String(req.user._id)) {
+      return res.status(403).json({ message: "You can only edit your own journal." });
+    }
+    const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("user", "username pic")
+      .populate("trail", "name location difficulty");
+    res.status(200).json(blog);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
+const deleteBlog = async (req, res) => {
+  try {
+    const existing = await Blog.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: "The journal cannot be found." });
+    }
+    if (String(existing.user) !== String(req.user._id)) {
+      return res
+        .status(403)
+        .json({ message: "You can only delete your own journal." });
+    }
+    await existing.deleteOne();
+    res.status(200).json({ message: "Journal successfully deleted." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-module.exports = {createBlog, updateBlog, deleteBlog, getAllBlogs, getBlogById, getBlogsByTrail, getBlogsByUser}
+module.exports = {
+  createBlog,
+  updateBlog,
+  deleteBlog,
+  getAllBlogs,
+  getBlogById,
+  getBlogsByTrail,
+  getBlogsByUser,
+};

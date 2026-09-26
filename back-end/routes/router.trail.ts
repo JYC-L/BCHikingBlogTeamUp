@@ -1,12 +1,13 @@
-const express = require("express");
-const router = express.Router();
-const {
+import { Router } from "express";
+import {
+  createTrail,
+  deleteTrail,
   getAllTrails,
   getTrail,
-  createTrail,
   updateTrail,
-  deleteTrail,
-} = require("../controllers/controller.trail");
+} from "../controllers/controller.trail";
+
+const router = Router();
 
 router.get("/", getAllTrails);
 router.get("/:id", getTrail);
@@ -14,4 +15,4 @@ router.post("/", createTrail);
 router.put("/:id", updateTrail);
 router.delete("/:id", deleteTrail);
 
-module.exports = router;
+export default router;
