@@ -7,6 +7,8 @@ The app offers **personalized trail recommendations** based on user preferences,
 
 The app is built using React for the front-end, Node.js/Express for the back-end, and MongoDB for managing user and trail data.
 
+Development progress for the phase 1 branch and the trail-profile work is in [docs/development-progress.md](docs/development-progress.md).
+
 # System Desgin Architecture
 
 ![BC Hiker Team-up App](https://github.com/user-attachments/assets/ddfb0ed0-2762-4e43-a8da-1a474268064e)
