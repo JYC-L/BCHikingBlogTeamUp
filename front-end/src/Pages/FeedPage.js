@@ -41,16 +41,22 @@ const FeedPage = () => {
         {loading && <Spinner />}
         {error && <Text color="red.500">{error}</Text>}
         {!loading && posts.length === 0 && (
-          <Text>No journals yet. Write the first one from a trail you have hiked.</Text>
+          <Text>No journals yet. Write one and choose a trail profile for it.</Text>
         )}
         <Stack spacing={4}>
           {posts.map((post) => (
             <Box key={post._id} bg="white" p={5} borderRadius="lg" borderWidth="1px">
-              <Heading size="md">{post.title}</Heading>
-              <Text fontSize="sm" color="gray.600" mt={1}>
-                {post.user?.username || "Hiker"} on {post.trail?.name || "a trail"}
-                {post.trail?.location ? ` · ${post.trail.location}` : ""}
+              <Text fontSize="sm" color="gray.600">
+                {post.user?.username || "Hiker"}
               </Text>
+              <Heading size="md" mt={1}>
+                {post.title}
+              </Heading>
+              {post.trail?.name && (
+                <Badge mt={2} colorScheme="purple">
+                  {post.trail.name}
+                </Badge>
+              )}
               <Stack direction="row" mt={3} wrap="wrap">
                 {post.difficulty && <Badge>{post.difficulty}</Badge>}
                 {post.distanceKm != null && <Badge>{post.distanceKm} km</Badge>}

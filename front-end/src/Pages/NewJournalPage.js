@@ -93,11 +93,16 @@ const NewJournalPage = () => {
             <Input value={form.title} onChange={setField("title")} />
           </FormControl>
           <FormControl mb={3} isRequired>
-            <FormLabel>Trail</FormLabel>
-            <Select value={form.trail} onChange={setField("trail")} placeholder="Choose a trail">
+            <FormLabel>Trail profile</FormLabel>
+            <Select
+              value={form.trail}
+              onChange={setField("trail")}
+              placeholder="Choose a trail profile"
+            >
               {trails.map((trail) => (
                 <option key={trail._id} value={trail._id}>
                   {trail.name}
+                  {trail.location ? ` — ${trail.location}` : ""}
                 </option>
               ))}
             </Select>

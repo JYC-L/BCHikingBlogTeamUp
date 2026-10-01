@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
   Container,
   Heading,
-  SimpleGrid,
+  Input,
   Spinner,
+  Stack,
   Text,
 } from "@chakra-ui/react";
 import { useHistory } from "react-router-dom";
@@ -15,6 +15,7 @@ import api, { currentUser } from "../api";
 
 const TrailsPage = () => {
   const history = useHistory();
+  const [query, setQuery] = useState("");
   const [trails, setTrails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,49 +25,53 @@ const TrailsPage = () => {
       history.push("/");
       return;
     }
-    api
-      .get("/api/trails")
-      .then(({ data }) => setTrails(data))
-      .catch((err) => setError(err.response?.data?.message || "Could not load trails."))
-      .finally(() => setLoading(false));
-  }, [history]);
+    const handle = setTimeout(() => {
+      setLoading(true);
+      api
+        .get("/api/trails", { params: { q: query } })
+        .then(({ data }) => setTrails(data))
+        .catch((err) => setError(err.response?.data?.message || "Could not search trails."))
+        .finally(() => setLoading(false));
+    }, 200);
+    return () => clearTimeout(handle);
+  }, [history, query]);
 
   return (
     <Box minH="100vh" bg="gray.50" textAlign="left">
       <NavBar />
-      <Container maxW="5xl" py={8}>
-        <Heading size="lg" mb={6}>
-          Trails
+      <Container maxW="3xl" py={8}>
+        <Heading size="lg" mb={4}>
+          Trail profiles
         </Heading>
+        <Input
+          bg="white"
+          mb={6}
+          placeholder="Search by name, place, or difficulty"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
         {loading && <Spinner />}
         {error && <Text color="red.500">{error}</Text>}
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+        {!loading && trails.length === 0 && <Text>No trail profiles match that search.</Text>}
+        <Stack spacing={3}>
           {trails.map((trail) => (
-            <Box key={trail._id} bg="white" p={5} borderRadius="lg" borderWidth="1px">
-              <Heading size="md">{trail.name}</Heading>
+            <Box
+              key={trail._id}
+              bg="white"
+              p={4}
+              borderRadius="lg"
+              borderWidth="1px"
+              cursor="pointer"
+              onClick={() => history.push(`/trails/${trail._id}`)}
+            >
+              <Heading size="sm">{trail.name}</Heading>
               <Text color="gray.600" mt={1}>
                 {trail.location}
               </Text>
-              <Box mt={3}>
-                <Badge mr={2}>{trail.difficulty}</Badge>
-                <Badge mr={2}>{trail.length}</Badge>
-                <Badge>{trail.elevation}</Badge>
-              </Box>
-              <Text mt={3}>{trail.description}</Text>
-              <Text fontSize="sm" color="gray.500" mt={2}>
-                {trail.latitude.toFixed(4)}, {trail.longitude.toFixed(4)} · {trail.routeType}
-              </Text>
-              <Button
-                mt={4}
-                size="sm"
-                colorScheme="green"
-                onClick={() => history.push(`/journals/new?trail=${trail._id}`)}
-              >
-                Write about this trail
-              </Button>
+              <Badge mt={2}>{trail.difficulty}</Badge>
             </Box>
           ))}
-        </SimpleGrid>
+        </Stack>
       </Container>
     </Box>
   );
