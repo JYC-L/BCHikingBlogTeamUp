@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { trailSearchFilter } from "../data/trailSearch";
 import Trail, { ITrail } from "../models/TrailModel";
 import { errorMessage, isDuplicateKey } from "../types/errors";
 
@@ -24,24 +25,11 @@ export const createTrail = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 export const getAllTrails = async (req: Request, res: Response): Promise<void> => {
   try {
-    const q = String(req.query.q || "").trim();
-    const pattern = q ? new RegExp(escapeRegex(q), "i") : null;
-    const trails = await Trail.find(
-      pattern
-        ? {
-            $or: [
-              { name: pattern },
-              { location: pattern },
-              { difficulty: pattern },
-              { description: pattern },
-            ],
-          }
-        : {}
-    ).sort({ name: 1 });
+    const trails = await Trail.find(trailSearchFilter(String(req.query.q || ""))).sort({
+      name: 1,
+    });
     res.status(200).json(trails);
   } catch (error) {
     res.status(500).json({ message: errorMessage(error) });
