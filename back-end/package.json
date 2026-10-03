@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "tsx services/mainServer.ts",
     "build": "tsc",
-    "start": "node dist/services/mainServer.js"
+    "start": "node dist/services/mainServer.js",
+    "import:trails": "tsx scripts/importTrails.ts",
+    "test": "tsx --test --test-concurrency=1 tests/unit/*.test.ts tests/integration/*.test.ts",
+    "test:unit": "tsx --test --test-concurrency=1 tests/unit/*.test.ts",
+    "test:integration": "tsx --test --test-concurrency=1 tests/integration/*.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +32,9 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.15.30",
+    "@types/supertest": "^7.2.1",
+    "mongodb-memory-server": "^11.3.0",
+    "supertest": "^7.3.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
