@@ -4,7 +4,7 @@
   "description": "a full-stack application designed to help hiking enthusiasts in Canada find and explore hiking trails based on their preferences, while also allowing users to share their hiking experiences through blogs and journals.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm test --prefix back-end && npm test --prefix front-end -- --watchAll=false",
     "start": "npm run dev --prefix back-end"
   },
   "author": "Liu, Jonathon",
