@@ -143,3 +143,91 @@ describe("accounts and journals", () => {
     assert.equal(blocked.status, 403);
   });
 });
+
+describe("team-up requests", () => {
+  it("posts a request, lists it for that hiker, and opens a connection", async () => {
+    const login = await request(app)
+      .post("/api/users/login")
+      .send({ email: "ada@example.com", password: "secret1" });
+    const beau = await request(app)
+      .post("/api/users/login")
+      .send({ email: "beau@example.com", password: "secret1" });
+    const trails = await request(app).get("/api/trails").query({ q: "quarry" });
+    const trailId = trails.body[0]._id;
+
+    const missing = await request(app).post("/api/teamups").send({
+      trail: trailId,
+      date: "2026-10-18",
+      groupSize: 3,
+      note: "Easy pace.",
+    });
+    assert.equal(missing.status, 401);
+
+    const created = await request(app)
+      .post("/api/teamups")
+      .set("Authorization", `Bearer ${login.body.token}`)
+      .send({
+        trail: trailId,
+        date: "2026-10-18",
+        groupSize: 3,
+        note: "Easy pace, happy to wait for photos.",
+        details: "Start at the Deep Cove lot.",
+      });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.user.username, "ada");
+    assert.equal(created.body.trail.name, "Quarry Rock");
+    assert.equal(created.body.groupSize, 3);
+
+    const feed = await request(app).get("/api/teamups");
+    assert.equal(feed.body[0].note, "Easy pace, happy to wait for photos.");
+
+    const history = await request(app).get(`/api/teamups/user/${login.body._id}`);
+    assert.equal(history.body.length, 1);
+
+    const journals = await request(app).get(`/api/blogs/user/${login.body._id}`);
+    assert.equal(journals.body[0].title, "Stairs in the trees");
+
+    const self = await request(app)
+      .post("/api/connections")
+      .set("Authorization", `Bearer ${login.body.token}`)
+      .send({ userId: login.body._id });
+    assert.equal(self.status, 400);
+
+    const connected = await request(app)
+      .post("/api/connections")
+      .set("Authorization", `Bearer ${beau.body.token}`)
+      .send({ userId: login.body._id, teamUpId: created.body._id });
+    assert.equal(connected.status, 201);
+    assert.equal(connected.body.status, "pending");
+    assert.equal(connected.body.recipient.username, "ada");
+
+    const again = await request(app)
+      .post("/api/connections")
+      .set("Authorization", `Bearer ${beau.body.token}`)
+      .send({ userId: login.body._id });
+    assert.equal(again.status, 200);
+    assert.equal(again.body.status, "pending");
+
+    const inbox = await request(app)
+      .get("/api/connections/mine")
+      .set("Authorization", `Bearer ${login.body.token}`);
+    assert.equal(inbox.body.incoming.length, 1);
+    assert.equal(inbox.body.incoming[0].requester.username, "beau");
+
+    const tooSoon = await request(app)
+      .get(`/api/connections/with/${login.body._id}`)
+      .set("Authorization", `Bearer ${beau.body.token}`);
+    assert.equal(tooSoon.body.status, "pending");
+
+    const accepted = await request(app)
+      .post(`/api/connections/${connected.body._id}/accept`)
+      .set("Authorization", `Bearer ${login.body.token}`);
+    assert.equal(accepted.status, 200);
+    assert.equal(accepted.body.status, "accepted");
+
+    const ready = await request(app)
+      .get(`/api/connections/with/${login.body._id}`)
+      .set("Authorization", `Bearer ${beau.body.token}`);
+    assert.equal(ready.body.status, "accepted");
+  });
+});

@@ -24,7 +24,10 @@ const NavBar = () => {
         BC Hiking
       </Heading>
       <Button variant="ghost" onClick={() => history.push("/feed")}>
-        Feed
+        Journals
+      </Button>
+      <Button variant="ghost" onClick={() => history.push("/teamups")}>
+        Team up
       </Button>
       <Button variant="ghost" onClick={() => history.push("/trails")}>
         Trails
@@ -32,8 +35,17 @@ const NavBar = () => {
       <Spacer />
       {user ? (
         <>
+          <Button variant="ghost" onClick={() => history.push("/requests")}>
+            Requests
+          </Button>
+          <Button variant="ghost" onClick={() => history.push(`/users/${user._id}`)}>
+            Profile
+          </Button>
           <Button colorScheme="green" onClick={() => history.push("/journals/new")}>
             Write journal
+          </Button>
+          <Button colorScheme="purple" onClick={() => history.push("/teamups/new")}>
+            New team-up
           </Button>
           <Button variant="outline" onClick={logout}>
             Log out
